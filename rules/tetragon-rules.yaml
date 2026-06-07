@@ -1,0 +1,122 @@
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicy
+metadata:
+  name: suspicious-file-creation
+spec:
+  lists:
+  - name: renameat-syscalls
+    type: "syscalls"
+    values:
+    - "sys_renameat"
+    - "sys_renameat2"
+
+  kprobes:
+  # Case A1: rename(oldpath, newpath)
+  - call: "sys_rename"
+    syscall: true
+    args:
+    - { index: 0, type: "string" }   # oldpath
+    - { index: 1, type: "string" }   # newpath
+    ignore:
+      callNotFound: true
+    selectors:
+    - matchArgs:
+      - index: 1
+        operator: "Postfix"
+        values: &suspicious_exts
+        - ".php"
+        - ".py"
+        - ".PHP"
+        - ".PY"
+      matchActions:
+      - action: Post
+
+  # Case A2: renameat/renameat2(..., oldpath, ..., newpath, ...)
+  - call: "list:renameat-syscalls"
+    syscall: true
+    args:
+    - { index: 1, type: "string" }   # oldpath
+    - { index: 3, type: "string" }   # newpath
+    ignore:
+      callNotFound: true
+    selectors:
+    - matchArgs:
+      - index: 3
+        operator: "Postfix"
+        values: *suspicious_exts
+      matchActions:
+      - action: Post
+
+  # Case B1: openat(..., "uploads/sus.php", O_CREAT, ...)
+  - call: "sys_openat"
+    syscall: true
+    args:
+    - { index: 0, type: "int" }
+    - { index: 1, type: "string" }   # pathname
+    - { index: 2, type: "int" }      # flags
+    ignore:
+      callNotFound: true
+    selectors:
+    - matchArgs:
+      - index: 1
+        operator: "Postfix"
+        values: *suspicious_exts
+      - index: 2
+        operator: "Mask"
+        values:
+        - "0x40"    # O_CREAT
+      matchActions:
+      - action: Post
+
+  # Case B2: openat2(..., "uploads/sus.php", ...)
+  # Không filter O_CREAT ở đây vì flags nằm trong struct open_how.
+  - call: "sys_openat2"
+    syscall: true
+    args:
+    - { index: 0, type: "int" }
+    - { index: 1, type: "string" }   # pathname
+    - { index: 2, type: "nop" }      # struct open_how*
+    - { index: 3, type: "size_t" }
+    ignore:
+      callNotFound: true
+    selectors:
+    - matchArgs:
+      - index: 1
+        operator: "Postfix"
+        values: *suspicious_exts
+      matchActions:
+      - action: Post
+
+  # Case B3: creat("uploads/sus.php", ...)
+  - call: "sys_creat"
+    syscall: true
+    args:
+    - { index: 0, type: "string" }
+    - { index: 1, type: "int" }
+    ignore:
+      callNotFound: true
+    selectors:
+    - matchArgs:
+      - index: 0
+        operator: "Postfix"
+        values: *suspicious_exts
+      matchActions:
+      - action: Post
+
+  # Case B4: write permission trên file cuối cùng nếu PHP mở được path .php/.py
+  - call: "security_file_permission"
+    syscall: false
+    args:
+    - { index: 0, type: "file" }
+    - { index: 1, type: "int" }
+    selectors:
+    - matchArgs:
+      - index: 0
+        operator: "Postfix"
+        values: *suspicious_exts
+      - index: 1
+        operator: "Equal"
+        values:
+        - "2"       # MAY_WRITE
+      matchActions:
+      - action: Post

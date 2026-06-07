@@ -1,0 +1,36 @@
+falco:
+  rules_files:
+    - /etc/falco/falco_rules.yaml
+    - /etc/falco/falco_rules.local.yaml
+    - /etc/falco/rules.d
+
+customRules:
+  suspicious_file_creation.yaml: |-
+    - macro: suspicious_filetype
+      condition: >
+        fd.filename endswith ".py"
+        or fd.filename endswith ".php"
+
+    - macro: allowed_directory
+      condition: >
+        fd.name startswith "/var/www/html/uploads"
+
+    - rule : suspicious_file_creation
+      desc: Detecting suspicious file creation
+      condition: >
+        evt.type in (open, openat, openat2, creat)
+        and fd.typechar = f
+        and suspicious_filetype
+        and not allowed_directory
+      output: >
+        Suspicious file extension created
+        file=%fd.name
+        filename=%fd.filename
+        user=%user.name
+        process=%proc.name
+        command=%proc.cmdline
+        pod=%k8s.pod.name
+        namespace=%k8s.ns.name
+        container=%container.name
+        image=%container.image.repository:%container.image.tag
+      priority: WARNING
