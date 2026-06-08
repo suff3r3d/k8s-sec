@@ -120,3 +120,39 @@ spec:
         - "2"       # MAY_WRITE
       matchActions:
       - action: Post
+---
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicy
+metadata:
+  name: directory-traversal
+spec:
+  lists:
+  - name: renameat-syscalls
+    type: "syscalls"
+    values:
+    - "sys_renameat"
+    - "sys_renameat2"
+
+  kprobes:
+  # rename(oldpath, newpath)
+  - call: "sys_rename"
+    syscall: true
+    message: "sys_rename directory traersal"
+    args:
+    - { index: 0, type: "string" }   # oldpath: /tmp/phpXXXX
+    - { index: 1, type: "string" }   # newpath
+    ignore:
+      callNotFound: true
+    selectors:
+    # 1. Path traversal raw string -> alert
+    - matchArgs:
+      - index: 0
+        operator: "Prefix"
+        values:
+        - "/tmp/php"
+      - index: 1
+        operator: "SubString"
+        values:
+        - "../"
+      matchActions:
+      - action: Post
