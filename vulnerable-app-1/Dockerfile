@@ -15,8 +15,8 @@ COPY apache.conf /etc/apache2/sites-available/000-default.conf
 
 COPY app/ /var/www/html/
 
-RUN mkdir -p /var/www/html/uploads && \
-    chmod -R 777 /var/www/html/uploads
+RUN mkdir -p /var/www/uploads && \
+    chmod -R 777 /var/www/uploads
 
 WORKDIR /var/www/html
 
