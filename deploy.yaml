@@ -19,6 +19,7 @@ spec:
     metadata:
       labels:
         app: vulnerable-app-1
+        falco.scope: vulnerable-app-1
     spec:
       containers:
         - name: vulnerable-app-1
@@ -43,6 +44,7 @@ spec:
     metadata:
       labels:
         app: vulnerable-app-2
+        falco.scope: vulnerable-app-1
     spec:
       containers:
         - name: vulnerable-app-2
