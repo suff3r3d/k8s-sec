@@ -1,0 +1,17 @@
+falco:
+  json_output: true
+
+  stdout_output:
+    enabled: true
+
+  webserver:
+    enabled: true
+    prometheus_metrics_enabled: true
+
+  metrics:
+    enabled: true
+    interval: 1m
+    rulesCountersEnabled: true
+
+serviceMonitor:
+  create: true

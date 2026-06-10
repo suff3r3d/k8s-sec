@@ -1,0 +1,14 @@
+tetragon:
+  prometheus:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  prometheusServiceMonitor:
+    enabled: true
+  metricsLabelFilter: "namespace,workload,pod,binary"
+
+tetragonOperator:
+  prometheus:
+    enabled: true
+    serviceMonitor:
+      enabled: true
