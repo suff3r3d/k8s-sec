@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Processing Failed</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <main>
+        <section class="result error">
+            <h1>Processing failed</h1>
+            <p class="lede">The bundle could not be reconstructed by the intake worker.</p>
+            <pre>{{ error }}</pre>
+            <div class="actions">
+                <a class="button secondary" href="/">Back to intake</a>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

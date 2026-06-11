@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bundle Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <main>
+        <div class="topbar">
+            <div class="brand">
+                <span class="mark">IF</span>
+                <span>InsightForge Data Intake</span>
+            </div>
+            <span class="badge">{{ processed_at }}</span>
+        </div>
+
+        <section class="result">
+            <h1>Bundle processed</h1>
+            <p class="lede">The uploaded bundle was reconstructed and profiled. Review the summary below before handing it to the analytics queue.</p>
+
+            <div class="summary-grid">
+                <div class="metric">
+                    <span>Object type</span>
+                    <strong>{{ object_type }}</strong>
+                </div>
+                <div class="metric">
+                    <span>Top-level size</span>
+                    <strong>{{ object_size }}</strong>
+                </div>
+                <div class="metric">
+                    <span>Payload bytes</span>
+                    <strong>{{ byte_count }}</strong>
+                </div>
+            </div>
+
+            <pre>{{ preview }}</pre>
+
+            <div class="actions">
+                <a class="button" href="/">Process another bundle</a>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

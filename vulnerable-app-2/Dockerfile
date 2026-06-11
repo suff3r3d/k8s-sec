@@ -1,8 +1,18 @@
 # Dockerfile
 FROM python:3.10-slim
 
-# Install sudo for the specific misconfiguration lab setup
-RUN apt-get update && apt-get install -y sudo && rm -rf /var/lib/apt/lists/*
+# Install sudo and basic network tools for the lab setup
+RUN apt-get update && apt-get install -y \
+    curl \
+    dnsutils \
+    iproute2 \
+    iputils-ping \
+    net-tools \
+    netcat-openbsd \
+    procps \
+    sudo \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create a low-privileged system user for the application
 RUN useradd -m appuser2
@@ -10,6 +20,8 @@ WORKDIR /home/appuser2
 
 RUN pip install --no-cache-dir flask
 COPY app.py .
+COPY templates/ templates/
+COPY static/ static/
 RUN chown -R appuser2:appuser2 /home/appuser2
 
 # SECURITY MISCONFIGURATION: Allow appuser2 to run 'find' as root without password

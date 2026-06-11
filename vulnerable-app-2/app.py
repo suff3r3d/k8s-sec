@@ -1,37 +1,56 @@
-# app.py
-from flask import Flask, request, render_template_string
+from datetime import datetime
+from pprint import pformat
 import pickle
-import os
+
+from flask import Flask, request, render_template
+
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024
 
-@app.route('/')
-def index():
-    return '''
-    <h2>Data Serialization Portal v2</h2>
-    <p>Upload your data file (.pkl) to parse and process:</p>
-    <form action="/upload" method="POST" enctype="multipart/form-data">
-        <input type="file" name="data_file">
-        <input type="submit" value="Upload & Process Data">
-    </form>
-    '''
 
-@app.route('/upload', methods=['POST'])
-def upload():
-    file = request.files.get('data_file')
-    if not file:
-        return "Error: No file uploaded!", 400
-        
+def object_size(value):
     try:
-        file_data = file.read()
-        
-        # CRITICAL VULNERABILITY: Insecure Deserialization via pickle.loads
-        # Automatically executes malicious payload embedded within the serialized data.
-        data_object = pickle.loads(file_data)
-        
-        return f"<h3>Success:</h3><p>Data successfully parsed and processed!</p><a href='/'>Back</a>"
-    except Exception as e:
-        return f"<h3>Data Processing Failed:</h3><pre>{str(e)}</pre><a href='/'>Back</a>"
+        return str(len(value))
+    except TypeError:
+        return "n/a"
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+
+def object_preview(value):
+    return pformat(value, width=100, compact=True)[:6000]
+
+
+@app.route("/")
+def index():
+    return render_template("index.html", today=datetime.utcnow().strftime("%b %d"))
+
+
+@app.route("/upload", methods=["POST"])
+def upload():
+    uploaded_file = request.files.get("data_file")
+    if not uploaded_file:
+        return render_template(
+            "error.html",
+            error="No bundle was attached to the request.",
+        ), 400
+
+    try:
+        file_data = uploaded_file.read()
+
+        # Vulnerable by design for the lab: untrusted pickle data is executed here.
+        data_object = pickle.loads(file_data)
+
+        return render_template(
+            "result.html",
+            processed_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
+            object_type=type(data_object).__name__,
+            object_size=object_size(data_object),
+            byte_count=f"{len(file_data):,}",
+            preview=object_preview(data_object),
+        )
+    except Exception as exc:
+        return render_template("error.html", error=str(exc)), 400
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)

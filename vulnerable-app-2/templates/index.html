@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>InsightForge Data Intake</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <main>
+        <div class="topbar">
+            <div class="brand">
+                <span class="mark">IF</span>
+                <span>InsightForge Data Intake</span>
+            </div>
+            <span class="badge">Internal analytics workspace</span>
+        </div>
+
+        <div class="layout">
+            <section class="hero" aria-labelledby="page-title">
+                <div>
+                    <h1 id="page-title">Review partner analysis bundles before release.</h1>
+                    <p class="lede">Upload a serialized bundle from an approved data science workflow. The portal reconstructs the package, profiles the contents, and prepares a quick operational summary for analysts.</p>
+                </div>
+
+                <div class="stats" aria-label="Processing summary">
+                    <div class="stat">
+                        <strong>2 MB</strong>
+                        <span>bundle size limit</span>
+                    </div>
+                    <div class="stat">
+                        <strong>PKL</strong>
+                        <span>accepted exchange format</span>
+                    </div>
+                    <div class="stat">
+                        <strong>{{ today }}</strong>
+                        <span>processing date</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel" aria-labelledby="upload-title">
+                <h2 id="upload-title">Upload analysis bundle</h2>
+                <p class="hint">Choose a serialized Python bundle exported by the offline model lab. The result page will render a compact inventory of the reconstructed object.</p>
+
+                <form action="/upload" method="POST" enctype="multipart/form-data">
+                    <div class="dropzone">
+                        <input id="data-file" type="file" name="data_file" accept=".pkl,.pickle,application/octet-stream" required>
+                        <div>
+                            <div class="upload-icon">+</div>
+                            <strong>Drop a bundle here</strong>
+                            <p class="hint">or click the panel to browse</p>
+                            <div id="file-name" class="file-name"></div>
+                        </div>
+                    </div>
+                    <button type="submit">Process bundle</button>
+                </form>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        const input = document.getElementById('data-file');
+        const fileName = document.getElementById('file-name');
+
+        input.addEventListener('change', () => {
+            fileName.textContent = input.files[0] ? input.files[0].name : '';
+        });
+    </script>
+</body>
+</html>
