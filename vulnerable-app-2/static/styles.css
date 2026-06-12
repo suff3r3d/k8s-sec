@@ -216,6 +216,26 @@ button {
     padding: 28px;
 }
 
+.status-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #b7ded6;
+    border-radius: 999px;
+    background: #ecfdf8;
+    color: #0f766e;
+    padding: 8px 12px;
+    font-size: .9rem;
+    font-weight: 750;
+}
+
+.status-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: #0f766e;
+}
+
 .summary-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -240,6 +260,22 @@ button {
 .metric strong {
     font-size: 1.1rem;
     overflow-wrap: anywhere;
+}
+
+.report-section {
+    border-top: 1px solid var(--line);
+    padding-top: 20px;
+    margin-top: 22px;
+}
+
+.report-section h2 {
+    margin-bottom: 8px;
+}
+
+.report-section p {
+    margin: 0;
+    color: #405168;
+    line-height: 1.65;
 }
 
 pre {

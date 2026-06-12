@@ -1,5 +1,6 @@
 from datetime import datetime
 from pprint import pformat
+from uuid import uuid4
 import pickle
 
 from flask import Flask, request, render_template
@@ -42,6 +43,8 @@ def upload():
 
         return render_template(
             "result.html",
+            review_id=f"IF-{uuid4().hex[:8].upper()}",
+            filename=uploaded_file.filename or "unnamed-bundle.pkl",
             processed_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
             object_type=type(data_object).__name__,
             object_size=object_size(data_object),

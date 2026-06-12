@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bundle Result</title>
+    <title>Intake Review</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
@@ -13,21 +13,26 @@
                 <span class="mark">IF</span>
                 <span>InsightForge Data Intake</span>
             </div>
-            <span class="badge">{{ processed_at }}</span>
+            <span class="badge">Review {{ review_id }}</span>
         </div>
 
         <section class="result">
-            <h1>Bundle processed</h1>
-            <p class="lede">The uploaded bundle was reconstructed and profiled. Review the summary below before handing it to the analytics queue.</p>
+            <div class="status-line">
+                <span class="status-dot"></span>
+                <span>Ready for analyst review</span>
+            </div>
+
+            <h1>Intake review prepared</h1>
+            <p class="lede">The submitted partner bundle was reconstructed by the intake worker. A lightweight profile is ready for triage before the data is moved into the analytics queue.</p>
 
             <div class="summary-grid">
                 <div class="metric">
-                    <span>Object type</span>
-                    <strong>{{ object_type }}</strong>
+                    <span>Source file</span>
+                    <strong>{{ filename }}</strong>
                 </div>
                 <div class="metric">
-                    <span>Top-level size</span>
-                    <strong>{{ object_size }}</strong>
+                    <span>Submitted</span>
+                    <strong>{{ processed_at }}</strong>
                 </div>
                 <div class="metric">
                     <span>Payload bytes</span>
@@ -35,7 +40,15 @@
                 </div>
             </div>
 
-            <pre>{{ preview }}</pre>
+            <div class="report-section">
+                <h2>Object profile</h2>
+                <p>The reconstructed bundle produced a <strong>{{ object_type }}</strong> object with <strong>{{ object_size }}</strong> top-level entries.</p>
+            </div>
+
+            <div class="report-section">
+                <h2>Preview</h2>
+                <pre>{{ preview }}</pre>
+            </div>
 
             <div class="actions">
                 <a class="button" href="/">Process another bundle</a>
