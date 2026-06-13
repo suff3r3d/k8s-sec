@@ -46,6 +46,7 @@ spec:
         app: vulnerable-app-2
         falco.scope: vulnerable-app-2
     spec:
+      serviceAccountName: vulnerable-app-2-sa
       containers:
         - name: vulnerable-app-2
           image: vulnerable-app-2
@@ -114,3 +115,37 @@ spec:
             name: vulnerable-app-2-service
             port:
               number: 80
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vulnerable-app-2-sa
+  namespace: vulnerable-app
+automountServiceAccountToken: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: vulnerable-app-2-exec-role
+  namespace: vulnerable-app
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: vulnerable-app-2-exec-binding
+  namespace: vulnerable-app
+subjects:
+  - kind: ServiceAccount
+    name: vulnerable-app-2-sa
+    namespace: vulnerable-app
+roleRef:
+  kind: Role
+  name: vulnerable-app-2-exec-role
+  apiGroup: rbac.authorization.k8s.io
