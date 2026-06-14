@@ -156,3 +156,65 @@ spec:
         - "../"
       matchActions:
       - action: Post
+---
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicy
+metadata:
+  name: suspicious-serviceaccount-access
+spec:
+  kprobes:
+  - call: "security_file_permission"
+    syscall: false
+    return: true
+    args:
+    - index: 0
+      type: "file"
+      label: "file"
+    - index: 1
+      type: "int"
+      label: "access_mask"
+    returnArg:
+      index: 0
+      type: "int"
+    selectors:
+    - matchBinaries:
+      - operator: "In"
+        values: &legitimate_binary_to_access_serviceaccount
+        - "/bin/operator"
+        - "/operator"
+        - "/bin/prometheus"
+        - "/prometheus"
+        - "/metrics-sidecar"
+        - "/coredns"
+        - "/storage-provisioner"
+        - "/kube-state-metrics"
+        - "/dashboard"
+      matchArgs:
+      - index: 0
+        operator: "Prefix"
+        values:
+        - "/var/run/secrets/kubernetes.io/serviceaccount/"
+        - "/run/secrets/kubernetes.io/serviceaccount/"
+      - index: 1
+        operator: "Mask"
+        values:
+        - "4"
+      matchActions:
+      - action: NoPost
+
+    # 2. Còn lại: process khác đọc serviceaccount dir -> log
+    - matchBinaries:
+      - operator: "NotIn"
+        values: *legitimate_binary_to_access_serviceaccount
+    - matchArgs:
+      - index: 0
+        operator: "Prefix"
+        values:
+        - "/var/run/secrets/kubernetes.io/serviceaccount/"
+        - "/run/secrets/kubernetes.io/serviceaccount/"
+      - index: 1
+        operator: "Mask"
+        values:
+        - "4"
+      matchActions:
+      - action: Post
