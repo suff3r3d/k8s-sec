@@ -6,26 +6,22 @@ falco:
 
 customRules:
   webroot-write-guard.yaml: |-
+    - list: webroot_paths
+      items: [/var/www/html]
+
     - macro: is_vulnerable_app_1
       condition: >
         k8s.ns.name = "vulnerable-app"
-        and k8s.pod.label[app] = "vulnerable-app-1"
+        and k8s.pod.name startswith "vulnerable-app-1"
 
-    - macro: webroot_direct_write_fd
+    - macro: webroot_direct_write
       condition: >
         evt.type in (open, openat, openat2, creat)
         and evt.failed=false
         and evt.is_open_write=true
-        and fd.name startswith "/var/www/html"
+        and fd.name pmatch (webroot_paths)
 
-    - macro: webroot_direct_write_path
-      condition: >
-        evt.type in (open, openat, openat2, creat)
-        and evt.failed=false
-        and evt.is_open_write=true
-        and fs.path.name startswith "/var/www/html"
-
-    - macro: webroot_rename_target
+    - macro: webroot_rename
       condition: >
         evt.type in (rename, renameat, renameat2)
         and evt.failed=false
@@ -40,9 +36,8 @@ customRules:
     - rule : webroot_write_guard
       desc: Webroot write guard
       condition: >
-        is_vulnerable_app_1 and webroot_direct_write_fd
-        or is_vulnerable_app_1 and webroot_direct_write_path
-        or is_vulnerable_app_1 and webroot_rename_target
+        is_vulnerable_app_1 and webroot_direct_write
+        or is_vulnerable_app_1 and webroot_rename
         or is_vulnerable_app_1 and webroot_rename_dst
       output: >
         Webroot got compromised
@@ -51,6 +46,7 @@ customRules:
         path=%fs.path.name
         target=%fs.path.target
         dst=%evt.abspath.dst
+        newpath=%evt.arg.newpath
         event=%evt.type
         user=%user.name
         process=%proc.name
