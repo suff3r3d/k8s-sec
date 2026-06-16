@@ -218,3 +218,48 @@ spec:
         - "4"
       matchActions:
       - action: Post
+---
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicy
+metadata:
+  name: webroot-file-write
+spec:
+  kprobes:
+  # Detect write access to resolved files under Apache webroot.
+  - call: "security_file_permission"
+    syscall: false
+    args:
+    - { index: 0, type: "file" }
+    - { index: 1, type: "int" }
+    selectors:
+    - matchArgs:
+      - index: 0
+        operator: "Prefix"
+        values:
+        - "/var/www/html"
+      - index: 1
+        operator: "Mask"
+        values:
+        - "2"       # MAY_WRITE
+      matchActions:
+      - action: Post
+
+  # Detect rename into Apache webroot using resolved destination path data.
+  - call: "security_path_rename"
+    syscall: false
+    args:
+    - { index: 0, type: "path" }    # old_dir
+    - { index: 1, type: "nop" }     # old_dentry
+    - { index: 2, type: "path" }    # new_dir
+    - { index: 3, type: "nop" }     # new_dentry
+    - { index: 4, type: "uint32" }  # flags
+    ignore:
+      callNotFound: true
+    selectors:
+    - matchArgs:
+      - index: 2
+        operator: "Prefix"
+        values:
+        - "/var/www/html"
+      matchActions:
+      - action: Post
