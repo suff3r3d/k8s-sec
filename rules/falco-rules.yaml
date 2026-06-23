@@ -56,3 +56,60 @@ customRules:
         container=%container.name
         # image=%container.image.repository:%container.image.tag
       priority: CRITICAL
+
+  app-shell-spawn.yaml: |-
+    - list: shell_binaries
+      items: [sh, bash, dash, ash, zsh]
+
+    - macro: is_vulnerable_app_namespace
+      condition: >
+        k8s.ns.name = "vulnerable-app"
+
+    - macro: shell_execution
+      condition: >
+        evt.type = execve
+        and evt.failed=false
+        and proc.name in (shell_binaries)
+
+    - rule: webapp_shell_spawn
+      desc: Detect shell execution inside vulnerable app namespace
+      condition: >
+        is_vulnerable_app_namespace and shell_execution
+      output: >
+        Shell spawned by web or app process
+        shell=%proc.name
+        parent=%proc.pname
+        command=%proc.cmdline
+        parent_command=%proc.pcmdline
+        user=%user.name
+        pod=%k8s.pod.name
+        namespace=%k8s.ns.name
+        container=%container.name
+        image=%container.image.repository:%container.image.tag
+      priority: CRITICAL
+
+  sudo-usage.yaml: |-
+    - macro: is_vulnerable_app
+      condition: >
+        k8s.ns.name = "vulnerable-app"
+
+    - macro: sudo_execution
+      condition: >
+        proc.name = sudo
+
+    - rule: sudo_used_in_vulnerable_app
+      desc: Detect sudo execution inside vulnerable app pods
+      condition: >
+        is_vulnerable_app and sudo_execution
+      output: >
+        Sudo executed inside vulnerable app
+        command=%proc.cmdline
+        parent=%proc.pname
+        parent_command=%proc.pcmdline
+        user=%user.name
+        login_user=%user.loginname
+        pod=%k8s.pod.name
+        namespace=%k8s.ns.name
+        container=%container.name
+        image=%container.image.repository:%container.image.tag
+      priority: CRITICAL
