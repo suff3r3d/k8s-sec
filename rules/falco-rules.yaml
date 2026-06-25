@@ -61,22 +61,25 @@ customRules:
     - list: shell_binaries
       items: [sh, bash, dash, ash, zsh]
 
+    - list: suspicious_shell_parents
+      items: [apache2, httpd, php, php-fpm, python, python3, sudo]
+
     - macro: is_vulnerable_app_namespace
       condition: >
         k8s.ns.name = "vulnerable-app"
 
-    - macro: shell_execution
+    - macro: shell_spawned_by_suspicious_parent
       condition: >
         evt.type = execve
-        and evt.failed=false
         and proc.name in (shell_binaries)
+        and proc.pname in (suspicious_shell_parents)
 
     - rule: webapp_shell_spawn
-      desc: Detect shell execution inside vulnerable app namespace
+      desc: Detect shell spawned by a web runtime, app runtime, or privilege escalation helper
       condition: >
-        is_vulnerable_app_namespace and shell_execution
+        is_vulnerable_app_namespace and shell_spawned_by_suspicious_parent
       output: >
-        Shell spawned by web or app process
+        Shell spawned by suspicious parent process
         shell=%proc.name
         parent=%proc.pname
         command=%proc.cmdline
